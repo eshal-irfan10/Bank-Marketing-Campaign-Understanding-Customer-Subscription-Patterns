@@ -1,9 +1,10 @@
 """
 Bank Marketing Campaign — EDA Dashboard
-Pink / magenta / plum theme matching the project design.
+Visual design matched to the pink/plum mockup.
 """
 
 from pathlib import Path
+import base64
 
 import numpy as np
 import pandas as pd
@@ -11,216 +12,415 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
-# ---------------------------------------------------------------------------
-# Theme tokens (from design mockup)
-# ---------------------------------------------------------------------------
-PINK = "#EC4899"
-PINK_SOFT = "#F9A8D4"
-PINK_LIGHT = "#FCE7F3"
-PINK_DEEP = "#DB2777"
-PLUM = "#4A1942"
-PLUM_SOFT = "#6B3A5E"
-BG = "#FFF1F5"
+# Exact mockup palette
+PINK = "#E91E63"
+PINK_HOT = "#FF4F9A"
+PINK_MID = "#F48FB1"
+PINK_SOFT = "#F8BBD0"
+PINK_PALE = "#FCE4EC"
+PINK_BG = "#FDEFF4"
+PLUM = "#2D1B33"
+PLUM_DEEP = "#1A101C"
+TEXT = "#2D1B33"
+MUTED = "#7A5A6A"
 WHITE = "#FFFFFF"
-TEXT = "#3B0A2A"
 
-PLOTLY_LAYOUT = dict(
+PLOTLY = dict(
     paper_bgcolor="rgba(0,0,0,0)",
     plot_bgcolor="rgba(0,0,0,0)",
-    font=dict(color=TEXT, family="Segoe UI, sans-serif", size=13),
-    margin=dict(l=40, r=20, t=50, b=40),
-    colorway=[PINK, PINK_SOFT, PLUM, "#F472B6", "#9D174D", "#BE185D"],
+    font=dict(color=TEXT, family="Poppins, sans-serif", size=11),
+    margin=dict(l=28, r=12, t=10, b=28),
 )
 
 
 @st.cache_data
 def load_data():
-    path = Path("data") / "bank.csv"
-    df = pd.read_csv(path)
-    # Treat literal "unknown" as incomplete for cleaning view (kept as category in analysis)
-    return df
+    return pd.read_csv(Path("data") / "bank.csv")
+
+
+def svg_b64(path: Path) -> str:
+    return base64.b64encode(path.read_bytes()).decode()
 
 
 def inject_css():
     st.markdown(
         f"""
-        <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
 
-        html, body, [class*="css"] {{
-            font-family: 'Plus Jakarta Sans', sans-serif;
-        }}
+html, body, [class*="css"] {{ font-family: 'Poppins', sans-serif !important; }}
 
-        .stApp {{
-            background: linear-gradient(180deg, {BG} 0%, #FFE4F0 55%, #FFD6E8 100%);
-        }}
+.stApp {{
+  background: {PINK_BG} !important;
+}}
+.stApp::before {{
+  content: "";
+  position: fixed; right: 0; bottom: 0; width: 42vw; height: 34vh;
+  background: radial-gradient(ellipse at bottom right, #FFB6D5 0%, #F8BBD088 35%, transparent 70%);
+  pointer-events: none; z-index: 0;
+}}
+.block-container {{
+  padding-top: 1.2rem !important;
+  padding-bottom: 2rem !important;
+  max-width: 1200px;
+  position: relative; z-index: 1;
+}}
 
-        section[data-testid="stSidebar"] {{
-            background: linear-gradient(180deg, {PLUM} 0%, #3A1235 100%) !important;
-        }}
-        section[data-testid="stSidebar"] * {{
-            color: #FFE4F0 !important;
-        }}
-        section[data-testid="stSidebar"] .stSelectbox label,
-        section[data-testid="stSidebar"] .stMultiSelect label,
-        section[data-testid="stSidebar"] .stSlider label {{
-            color: #FBCFE8 !important;
-            font-weight: 600;
-        }}
+/* ===== SIDEBAR (vivid magenta / plum) ===== */
+section[data-testid="stSidebar"],
+section[data-testid="stSidebar"] > div,
+section[data-testid="stSidebar"] [data-testid="stSidebarContent"],
+section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"] {{
+  background: transparent !important;
+}}
+section[data-testid="stSidebar"] {{
+  min-width: 280px !important;
+  background:
+    radial-gradient(ellipse 140% 60% at 50% 115%, #FF5CA8 0%, #FF2E86 22%, #AD1457AA 42%, transparent 62%),
+    radial-gradient(ellipse 90% 45% at -10% -5%, #FF9EC8 0%, transparent 50%),
+    linear-gradient(170deg, #7B2D5B 0%, #5C1F4A 28%, #3E1638 65%, #2A0F28 100%) !important;
+}}
+section[data-testid="stSidebar"] > div:first-child {{
+  background: transparent !important;
+  padding: 1.2rem 1rem 1.75rem 1rem;
+}}
+section[data-testid="stSidebar"] * {{ color: #FFF0F6 !important; }}
+section[data-testid="stSidebar"] hr {{
+  border: none !important;
+  height: 2px !important;
+  background: linear-gradient(90deg, transparent, #FF8AC4, #FF4F9A, #FF8AC4, transparent) !important;
+  margin: 1rem 0 !important;
+  opacity: 0.85;
+}}
 
-        div[data-baseweb="select"] > div {{
-            background-color: {PLUM_SOFT} !important;
-            border-radius: 12px !important;
-            border: 1px solid #EC489955 !important;
-        }}
+/* Nav radio = mockup menu */
+section[data-testid="stSidebar"] div[role="radiogroup"] {{ gap: 0.5rem; }}
+section[data-testid="stSidebar"] div[role="radiogroup"] label {{
+  background: rgba(255,255,255,0.10) !important;
+  border-radius: 16px !important;
+  padding: 0.82rem 1.05rem !important;
+  margin: 0 !important;
+  border: 1px solid rgba(255,158,200,0.28) !important;
+  backdrop-filter: blur(6px);
+  transition: 0.2s ease;
+}}
+section[data-testid="stSidebar"] div[role="radiogroup"] label:hover {{
+  background: rgba(255,79,154,0.40) !important;
+  border-color: rgba(255,176,208,0.7) !important;
+  box-shadow: 0 6px 18px rgba(255,46,134,0.35);
+  transform: translateX(4px);
+}}
+section[data-testid="stSidebar"] div[role="radiogroup"] label:has(input:checked) {{
+  background: linear-gradient(100deg, #FF8AC4 0%, #FF4F9A 40%, #FF1F75 100%) !important;
+  border-color: rgba(255,255,255,0.35) !important;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.2) inset,
+              0 12px 32px rgba(255,31,117,0.65),
+              0 0 36px rgba(255,79,154,0.45);
+}}
+section[data-testid="stSidebar"] div[role="radiogroup"] label:has(input:checked) * {{
+  color: #fff !important;
+}}
+section[data-testid="stSidebar"] div[role="radiogroup"] label span {{
+  font-weight: 700 !important; font-size: 0.96rem !important;
+}}
+section[data-testid="stSidebar"] div[role="radiogroup"] label [data-testid="stMarkdownContainer"] p {{
+  font-size: 0.96rem !important; font-weight: 700 !important; letter-spacing: 0.01em;
+  color: #FFF5FA !important;
+}}
 
-        .hero-title {{
-            font-size: 1.85rem;
-            font-weight: 800;
-            color: {PLUM};
-            margin-bottom: 0.15rem;
-            line-height: 1.25;
-        }}
-        .hero-sub {{
-            color: {PLUM_SOFT};
-            font-size: 0.98rem;
-            margin-bottom: 0.6rem;
-        }}
-        .pill {{
-            display: inline-block;
-            background: linear-gradient(90deg, {PINK}, {PINK_DEEP});
-            color: white !important;
-            padding: 0.35rem 0.9rem;
-            border-radius: 999px;
-            font-size: 0.82rem;
-            font-weight: 700;
-            box-shadow: 0 6px 16px rgba(236, 72, 153, 0.35);
-        }}
+section[data-testid="stSidebar"] .stExpander {{
+  background: linear-gradient(145deg, rgba(255,79,154,0.32), rgba(255,255,255,0.10));
+  border-radius: 16px;
+  border: 1px solid rgba(255,158,200,0.5) !important;
+  box-shadow: 0 8px 22px rgba(0,0,0,0.2), inset 0 0 28px rgba(255,79,154,0.12);
+}}
+section[data-testid="stSidebar"] label {{ font-weight: 600 !important; color: #FFD6E8 !important; }}
+section[data-testid="stSidebar"] div[data-baseweb="select"] > div {{
+  background: rgba(255,255,255,0.16) !important;
+  border-radius: 12px !important;
+  border-color: rgba(255,158,200,0.55) !important;
+}}
 
-        .kpi-card {{
-            background: {WHITE};
-            border-radius: 22px;
-            padding: 1.1rem 1.2rem;
-            box-shadow: 0 10px 28px rgba(74, 25, 66, 0.08);
-            border: 1px solid #FBCFE8;
-            text-align: center;
-            height: 100%;
-        }}
-        .kpi-icon {{
-            width: 42px; height: 42px;
-            border-radius: 14px;
-            display: inline-flex; align-items: center; justify-content: center;
-            background: linear-gradient(135deg, {PINK_SOFT}, {PINK});
-            color: white; font-size: 1.2rem; margin-bottom: 0.4rem;
-        }}
-        .kpi-value {{
-            font-size: 1.75rem; font-weight: 800; color: {PLUM}; margin: 0;
-        }}
-        .kpi-label {{
-            font-size: 0.85rem; color: {PLUM_SOFT}; font-weight: 600; margin: 0;
-        }}
+.brand {{
+  display: flex; align-items: center; gap: 0.8rem;
+  padding: 0.4rem 0.35rem 1.35rem 0.35rem;
+}}
+.brand-icon {{
+  width: 54px; height: 54px; border-radius: 18px;
+  background: linear-gradient(145deg, #FFD0E6, #FF7AB8 40%, #FF2E86);
+  display: grid; place-items: center; font-size: 1.5rem;
+  box-shadow: 0 0 0 4px rgba(255,128,171,0.35),
+              0 12px 28px rgba(255,31,117,0.65),
+              0 0 40px rgba(255,79,154,0.55);
+}}
+.brand h1 {{
+  margin: 0; color: #fff !important; font-size: 1.12rem; font-weight: 800; line-height: 1.25;
+  text-shadow: 0 2px 16px rgba(255,79,154,0.55);
+}}
 
-        .panel {{
-            background: {WHITE};
-            border-radius: 22px;
-            padding: 1rem 1.1rem 0.6rem 1.1rem;
-            box-shadow: 0 10px 28px rgba(74, 25, 66, 0.08);
-            border: 1px solid #FBCFE8;
-            margin-bottom: 1rem;
-        }}
-        .panel-title {{
-            font-weight: 800; color: {PLUM}; font-size: 1.05rem; margin: 0 0 0.4rem 0;
-        }}
+.project-card {{
+  margin-top: 1.6rem;
+  background: linear-gradient(155deg, rgba(255,79,154,0.45) 0%, rgba(255,46,134,0.22) 45%, rgba(255,255,255,0.10) 100%);
+  border: 1px solid rgba(255,190,220,0.55);
+  border-radius: 18px;
+  padding: 1.05rem 1.1rem;
+  font-size: 0.82rem; line-height: 1.5;
+  box-shadow: 0 12px 28px rgba(0,0,0,0.25),
+              inset 0 1px 0 rgba(255,255,255,0.22),
+              0 0 24px rgba(255,79,154,0.2);
+}}
+.project-card .pt {{ color: #fff !important; font-weight: 800; font-size: 0.95rem; margin-bottom: 0.4rem; }}
+.project-card .heart {{
+  color: #FFB0D0 !important; margin-top: 0.55rem; font-size: 1.15rem;
+  text-shadow: 0 0 16px rgba(255,128,171,1);
+}}
 
-        .insight-box {{
-            background: {WHITE};
-            border-radius: 22px;
-            padding: 1.2rem 1.3rem;
-            box-shadow: 0 10px 28px rgba(74, 25, 66, 0.08);
-            border: 1px solid #FBCFE8;
-        }}
-        .insight-box h3 {{
-            color: {PLUM}; margin-top: 0; font-weight: 800;
-        }}
-        .insight-box li {{
-            color: {PLUM_SOFT}; margin-bottom: 0.45rem; font-weight: 500;
-        }}
+/* ===== MAIN ===== */
+.hero {{
+  display: flex; justify-content: space-between; align-items: flex-start;
+  gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;
+}}
+.hero h1 {{
+  margin: 0; font-size: 1.85rem; font-weight: 800; color: {PLUM}; line-height: 1.15;
+}}
+.hero p {{
+  margin: 0.2rem 0 0 0; color: {MUTED}; font-size: 0.95rem; font-weight: 500;
+}}
+.badge {{
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  background: {WHITE}; color: {PLUM};
+  border: 1px solid #F8BBD0; border-radius: 999px;
+  padding: 0.45rem 0.95rem; font-size: 0.78rem; font-weight: 600;
+  box-shadow: 0 6px 16px rgba(45,27,51,0.06);
+}}
 
-        .side-brand {{
-            text-align: center; padding: 0.5rem 0 1rem 0;
-        }}
-        .side-brand h2 {{
-            color: #FFF !important; font-size: 1.15rem; font-weight: 800; margin: 0.4rem 0 0 0;
-        }}
-        .side-card {{
-            background: rgba(255,255,255,0.08);
-            border: 1px solid rgba(249,168,212,0.35);
-            border-radius: 16px;
-            padding: 0.85rem;
-            margin-top: 1rem;
-            font-size: 0.85rem;
-        }}
+.kpi {{
+  background: {WHITE}; border-radius: 18px;
+  border: 1px solid #F8BBD0;
+  box-shadow: 0 10px 26px rgba(45,27,51,0.06);
+  padding: 0.95rem 1rem; display: flex; align-items: center; gap: 0.85rem;
+  min-height: 88px;
+}}
+.kpi .ic {{
+  width: 46px; height: 46px; min-width: 46px; border-radius: 14px;
+  display: grid; place-items: center; font-size: 1.2rem; color: #fff;
+  background: linear-gradient(145deg, #FF80AB, #E91E63);
+  box-shadow: 0 8px 16px rgba(233,30,99,0.28);
+}}
+.kpi .ic.gold {{
+  background: linear-gradient(145deg, #FFE082, #FFB300);
+  box-shadow: 0 8px 16px rgba(255,179,0,0.28);
+}}
+.kpi .v {{ margin: 0; font-size: 1.45rem; font-weight: 800; color: {PLUM}; line-height: 1.1; }}
+.kpi .l {{ margin: 0.12rem 0 0 0; font-size: 0.76rem; color: {MUTED}; font-weight: 500; }}
 
-        /* Hide default Streamlit chrome noise */
-        #MainMenu {{visibility: hidden;}}
-        footer {{visibility: hidden;}}
-        header {{visibility: hidden;}}
-        </style>
+.card {{
+  background: {WHITE}; border-radius: 20px;
+  border: 1px solid #F8BBD0;
+  box-shadow: 0 10px 26px rgba(45,27,51,0.06);
+  padding: 0.85rem 0.95rem 0.4rem 0.95rem;
+  height: 100%;
+}}
+.card h3 {{
+  margin: 0 0 0.15rem 0; font-size: 0.95rem; font-weight: 700; color: {PLUM};
+}}
+
+.insights {{
+  background: {WHITE}; border-radius: 20px;
+  border: 1px solid #F8BBD0;
+  box-shadow: 0 10px 26px rgba(45,27,51,0.06);
+  padding: 1.1rem 1.15rem; height: 100%;
+}}
+.insights h3 {{
+  margin: 0 0 0.85rem 0; font-size: 1rem; font-weight: 700; color: {PLUM};
+}}
+.ins-row {{
+  display: flex; gap: 0.65rem; align-items: flex-start; margin-bottom: 0.75rem;
+}}
+.ins-ic {{
+  width: 26px; height: 26px; min-width: 26px; border-radius: 50%;
+  background: linear-gradient(145deg, #FF80AB, #E91E63);
+  color: #fff; font-size: 0.72rem; display: grid; place-items: center;
+}}
+.ins-txt {{ color: {MUTED}; font-size: 0.86rem; font-weight: 500; line-height: 1.4; }}
+
+.decor {{
+  position: fixed; right: 18px; bottom: 8px; width: 210px; opacity: 0.95;
+  pointer-events: none; z-index: 0;
+}}
+
+#MainMenu, footer, header {{ visibility: hidden; }}
+div[data-testid="stToolbar"] {{ display: none; }}
+</style>
         """,
         unsafe_allow_html=True,
     )
 
 
-def kpi_card(icon: str, value: str, label: str) -> str:
+def kpi(icon, value, label, gold=False):
+    cls = "ic gold" if gold else "ic"
     return f"""
-    <div class="kpi-card">
-        <div class="kpi-icon">{icon}</div>
-        <p class="kpi-value">{value}</p>
-        <p class="kpi-label">{label}</p>
-    </div>
-    """
+    <div class="kpi">
+      <div class="{cls}">{icon}</div>
+      <div><p class="v">{value}</p><p class="l">{label}</p></div>
+    </div>"""
 
 
-def apply_filters(df: pd.DataFrame) -> pd.DataFrame:
+def fig_donut_sub(df):
+    yes = int((df["deposit"] == "yes").sum())
+    no = int((df["deposit"] == "no").sum())
+    fig = go.Figure(go.Pie(
+        labels=["Yes", "No"], values=[yes, no], hole=0.66, sort=False,
+        marker=dict(colors=[PINK, PINK_SOFT], line=dict(color=WHITE, width=4)),
+        textinfo="percent", textposition="outside",
+        textfont=dict(size=12, color=TEXT, family="Poppins"),
+    ))
+    fig.update_layout(**PLOTLY, height=265, showlegend=True,
+                      legend=dict(orientation="h", y=-0.05, x=0.5, xanchor="center",
+                                  font=dict(size=11)))
+    return fig
+
+
+def fig_age(df):
+    fig = px.histogram(df, x="age", nbins=22, color_discrete_sequence=[PINK_MID])
+    fig.update_traces(marker_line_color=WHITE, marker_line_width=1)
+    fig.update_layout(**PLOTLY, height=265, bargap=0.1, showlegend=False)
+    fig.update_xaxes(title="Age", gridcolor="#F8BBD0", showgrid=True, zeroline=False)
+    fig.update_yaxes(title="Count", gridcolor="#F8BBD0", showgrid=True, zeroline=False)
+    return fig
+
+
+def fig_job(df):
+    # Match mockup jobs subset order if present
+    preferred = ["admin.", "blue-collar", "entrepreneur", "services",
+                 "student", "technician", "unemployed", "management",
+                 "retired", "self-employed", "housemaid", "unknown"]
+    ct = (
+        df.groupby(["job", "deposit"]).size().reset_index(name="count")
+        .replace({"deposit": {"yes": "Subscribed", "no": "Not Subscribed"}})
+    )
+    present = [j for j in preferred if j in set(ct["job"])]
+    ct["job"] = pd.Categorical(ct["job"], categories=present, ordered=True)
+    ct = ct.sort_values("job")
+    fig = px.bar(
+        ct, x="job", y="count", color="deposit", barmode="group",
+        color_discrete_map={"Subscribed": PINK, "Not Subscribed": PINK_SOFT},
+    )
+    fig.update_layout(**PLOTLY, height=265, showlegend=True,
+                      legend=dict(orientation="h", y=-0.42, title=None, font=dict(size=10)),
+                      xaxis_tickangle=-25)
+    fig.update_xaxes(title="", gridcolor="#F8BBD0")
+    fig.update_yaxes(title="", gridcolor="#F8BBD0")
+    return fig
+
+
+def fig_contact(df):
+    counts = df["contact"].value_counts()
+    # Order: cellular, telephone, unknown like mockup legend feel
+    order = [c for c in ["cellular", "telephone", "unknown"] if c in counts.index]
+    order += [c for c in counts.index if c not in order]
+    vals = [counts[c] for c in order]
+    labels = [c.title() for c in order]
+    fig = go.Figure(go.Pie(
+        labels=labels, values=vals, hole=0.64, sort=False,
+        marker=dict(colors=[PINK, PINK_SOFT, "#CE93D8"][: len(order)],
+                    line=dict(color=WHITE, width=4)),
+        textinfo="none",
+    ))
+    fig.update_layout(**PLOTLY, height=265, showlegend=True,
+                      legend=dict(orientation="h", y=-0.08, x=0.5, xanchor="center",
+                                  font=dict(size=11)))
+    return fig
+
+
+def fig_balance(df):
+    d = df.copy()
+    d["label"] = d["deposit"].map({"yes": "Subscribed", "no": "Not Subscribed"})
+    fig = px.box(d, x="label", y="balance", color="label",
+                 color_discrete_map={"Subscribed": PINK, "Not Subscribed": PINK_SOFT}, points=False)
+    fig.update_layout(**PLOTLY, height=320, showlegend=False)
+    fig.update_xaxes(title=""); fig.update_yaxes(title="Balance", gridcolor="#F8BBD0")
+    return fig
+
+
+def fig_scatter(df):
+    s = df.sample(min(2500, len(df)), random_state=42).copy() if len(df) else df.copy()
+    s["label"] = s["deposit"].map({"yes": "Subscribed", "no": "Not Subscribed"})
+    fig = px.scatter(s, x="duration", y="balance", color="label",
+                     color_discrete_map={"Subscribed": PINK, "Not Subscribed": "#6A1B9A"},
+                     opacity=0.55, hover_data=["age", "job"])
+    fig.update_layout(**PLOTLY, height=320)
+    fig.update_xaxes(title="Duration (seconds)", gridcolor="#F8BBD0")
+    fig.update_yaxes(title="Balance", gridcolor="#F8BBD0")
+    return fig
+
+
+def fig_month(df):
+    order = ["jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec"]
+    tmp = (df.groupby("month")["deposit"].apply(lambda s: (s == "yes").mean() * 100)
+           .reindex([m for m in order if m in df["month"].unique()]).reset_index(name="rate"))
+    fig = px.bar(tmp, x="month", y="rate", color="rate",
+                 color_continuous_scale=[PINK_PALE, PINK, PLUM])
+    fig.update_layout(**PLOTLY, height=320, coloraxis_showscale=False)
+    fig.update_yaxes(title="Rate (%)", gridcolor="#F8BBD0")
+    return fig
+
+
+def fig_corr(df):
+    corr = df.select_dtypes(include=np.number).corr(numeric_only=True)
+    fig = px.imshow(corr, text_auto=".2f",
+                    color_continuous_scale=[PINK_PALE, PINK_SOFT, PINK, PLUM], aspect="auto")
+    fig.update_layout(**PLOTLY, height=380)
+    return fig
+
+
+def fig_edu(df):
+    rate = (df.groupby("education")["deposit"].apply(lambda s: (s == "yes").mean() * 100)
+            .reset_index(name="rate").sort_values("rate", ascending=False))
+    fig = px.bar(rate, x="education", y="rate", color="rate",
+                 color_continuous_scale=[PINK_PALE, PINK])
+    fig.update_layout(**PLOTLY, height=320, coloraxis_showscale=False)
+    fig.update_yaxes(title="Rate (%)", gridcolor="#F8BBD0")
+    return fig
+
+
+def sidebar(df):
     st.sidebar.markdown(
         """
-        <div class="side-brand">
-            <div style="font-size:2.2rem;">🏦</div>
-            <h2>Bank Marketing EDA</h2>
+        <div class="brand">
+          <div class="brand-icon">🏦</div>
+          <h1>Bank Marketing<br/>EDA</h1>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
     page = st.sidebar.radio(
-        "Navigate",
+        "nav",
         ["Overview", "Customer Analysis", "Campaign Insights", "Subscription Analysis", "About"],
         label_visibility="collapsed",
+        format_func=lambda x: {
+            "Overview": "🏠  Overview",
+            "Customer Analysis": "👤  Customer Analysis",
+            "Campaign Insights": "📢  Campaign Insights",
+            "Subscription Analysis": "📈  Subscription Analysis",
+            "About": "ℹ️  About",
+        }[x],
     )
 
-    st.sidebar.markdown("---")
-    st.sidebar.markdown("### Filters")
-
-    jobs = sorted(df["job"].unique().tolist())
-    selected_jobs = st.sidebar.multiselect("Job", jobs, default=jobs)
-
-    marital_opts = sorted(df["marital"].unique().tolist())
-    selected_marital = st.sidebar.multiselect("Marital status", marital_opts, default=marital_opts)
-
-    edu_opts = sorted(df["education"].unique().tolist())
-    selected_edu = st.sidebar.multiselect("Education", edu_opts, default=edu_opts)
-
-    age_min, age_max = int(df["age"].min()), int(df["age"].max())
-    age_range = st.sidebar.slider("Age range", age_min, age_max, (age_min, age_max))
-
-    months = [
-        "jan", "feb", "mar", "apr", "may", "jun",
-        "jul", "aug", "sep", "oct", "nov", "dec",
-    ]
-    present_months = [m for m in months if m in set(df["month"])]
-    selected_months = st.sidebar.multiselect("Contact month", present_months, default=present_months)
-
-    deposit_filter = st.sidebar.selectbox("Subscription (deposit)", ["All", "yes", "no"])
+    with st.sidebar.expander("Filters", expanded=False):
+        jobs = sorted(df["job"].unique().tolist())
+        selected_jobs = st.multiselect("Job", jobs, default=jobs)
+        marital_opts = sorted(df["marital"].unique().tolist())
+        selected_marital = st.multiselect("Marital status", marital_opts, default=marital_opts)
+        edu_opts = sorted(df["education"].unique().tolist())
+        selected_edu = st.multiselect("Education", edu_opts, default=edu_opts)
+        age_min, age_max = int(df["age"].min()), int(df["age"].max())
+        age_range = st.slider("Age range", age_min, age_max, (age_min, age_max))
+        months = ["jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec"]
+        present = [m for m in months if m in set(df["month"])]
+        selected_months = st.multiselect("Contact month", present, default=present)
+        deposit_filter = st.selectbox("Subscription", ["All", "yes", "no"])
 
     filtered = df[
         df["job"].isin(selected_jobs)
@@ -229,15 +429,15 @@ def apply_filters(df: pd.DataFrame) -> pd.DataFrame:
         & df["age"].between(age_range[0], age_range[1])
         & df["month"].isin(selected_months)
     ].copy()
-
     if deposit_filter != "All":
         filtered = filtered[filtered["deposit"] == deposit_filter]
 
     st.sidebar.markdown(
         """
-        <div class="side-card">
-            <strong>Project</strong><br/>
-            Exploring customer patterns in bank marketing campaigns.
+        <div class="project-card">
+          <div class="pt">✨ Project</div>
+          Exploring customer patterns in bank marketing campaigns.
+          <div class="heart">♡</div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -245,319 +445,161 @@ def apply_filters(df: pd.DataFrame) -> pd.DataFrame:
     return filtered, page
 
 
-def subscription_donut(df: pd.DataFrame):
-    counts = df["deposit"].value_counts().rename(index={"yes": "Subscribed", "no": "Not Subscribed"})
-    fig = go.Figure(
-        data=[
-            go.Pie(
-                labels=counts.index,
-                values=counts.values,
-                hole=0.62,
-                marker=dict(colors=[PINK, PINK_SOFT]),
-                textinfo="percent",
-                textfont=dict(size=14, color=PLUM),
-            )
-        ]
-    )
-    fig.update_layout(**PLOTLY_LAYOUT, showlegend=True, height=320, title="Subscription Rate")
-    return fig
-
-
-def age_hist(df: pd.DataFrame):
-    fig = px.histogram(
-        df,
-        x="age",
-        nbins=25,
-        color_discrete_sequence=[PINK],
-        title="Age Distribution",
-    )
-    fig.update_traces(marker_line_color=WHITE, marker_line_width=0.5)
-    fig.update_layout(**PLOTLY_LAYOUT, height=320, bargap=0.05)
-    fig.update_xaxes(title="Age", gridcolor="#FBCFE8")
-    fig.update_yaxes(title="Count", gridcolor="#FBCFE8")
-    return fig
-
-
-def job_outcome(df: pd.DataFrame):
-    ct = (
-        df.groupby(["job", "deposit"])
-        .size()
-        .reset_index(name="count")
-        .replace({"deposit": {"yes": "Subscribed", "no": "Not Subscribed"}})
-    )
-    fig = px.bar(
-        ct,
-        x="job",
-        y="count",
-        color="deposit",
-        barmode="group",
-        color_discrete_map={"Subscribed": PINK, "Not Subscribed": PINK_SOFT},
-        title="Campaign Outcome by Job",
-    )
-    fig.update_layout(**PLOTLY_LAYOUT, height=320, xaxis_tickangle=-35)
-    fig.update_xaxes(title="Job", gridcolor="#FBCFE8")
-    fig.update_yaxes(title="Customers", gridcolor="#FBCFE8")
-    return fig
-
-
-def contact_donut(df: pd.DataFrame):
-    counts = df["contact"].value_counts()
-    fig = go.Figure(
-        data=[
-            go.Pie(
-                labels=counts.index.str.title(),
-                values=counts.values,
-                hole=0.58,
-                marker=dict(colors=[PINK, PINK_SOFT, PLUM_SOFT]),
-                textinfo="label+percent",
-            )
-        ]
-    )
-    fig.update_layout(**PLOTLY_LAYOUT, showlegend=False, height=320, title="Contact Type Analysis")
-    return fig
-
-
-def balance_by_deposit(df: pd.DataFrame):
-    plot_df = df.copy()
-    plot_df["deposit_label"] = plot_df["deposit"].map({"yes": "Subscribed", "no": "Not Subscribed"})
-    fig = px.box(
-        plot_df,
-        x="deposit_label",
-        y="balance",
-        color="deposit_label",
-        color_discrete_map={"Subscribed": PINK, "Not Subscribed": PINK_SOFT},
-        title="Account Balance by Subscription",
-        points=False,
-    )
-    fig.update_layout(**PLOTLY_LAYOUT, height=360, showlegend=False)
-    fig.update_yaxes(title="Balance", gridcolor="#FBCFE8")
-    fig.update_xaxes(title="")
-    return fig
-
-
-def duration_scatter(df: pd.DataFrame):
-    sample = df.sample(min(2500, len(df)), random_state=42) if len(df) else df
-    sample = sample.copy()
-    sample["deposit_label"] = sample["deposit"].map({"yes": "Subscribed", "no": "Not Subscribed"})
-    fig = px.scatter(
-        sample,
-        x="duration",
-        y="balance",
-        color="deposit_label",
-        color_discrete_map={"Subscribed": PINK, "Not Subscribed": PLUM_SOFT},
-        opacity=0.55,
-        title="Call Duration vs Balance",
-        hover_data=["age", "job"],
-    )
-    fig.update_layout(**PLOTLY_LAYOUT, height=360)
-    fig.update_xaxes(title="Duration (seconds)", gridcolor="#FBCFE8")
-    fig.update_yaxes(title="Balance", gridcolor="#FBCFE8")
-    return fig
-
-
-def month_sub_rate(df: pd.DataFrame):
-    order = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"]
-    tmp = (
-        df.groupby("month")["deposit"]
-        .apply(lambda s: (s == "yes").mean() * 100)
-        .reindex([m for m in order if m in df["month"].unique()])
-        .reset_index(name="rate")
-    )
-    fig = px.bar(
-        tmp,
-        x="month",
-        y="rate",
-        color="rate",
-        color_continuous_scale=["#FCE7F3", PINK, PLUM],
-        title="Subscription Rate by Month (%)",
-    )
-    fig.update_layout(**PLOTLY_LAYOUT, height=360, coloraxis_showscale=False)
-    fig.update_xaxes(title="Month")
-    fig.update_yaxes(title="Subscription rate (%)", gridcolor="#FBCFE8")
-    return fig
-
-
-def corr_heatmap(df: pd.DataFrame):
-    nums = df.select_dtypes(include=np.number)
-    corr = nums.corr(numeric_only=True)
-    fig = px.imshow(
-        corr,
-        text_auto=".2f",
-        color_continuous_scale=["#FCE7F3", PINK_SOFT, PINK, PLUM],
-        title="Numeric Feature Correlation",
-        aspect="auto",
-    )
-    fig.update_layout(**PLOTLY_LAYOUT, height=420)
-    return fig
-
-
-def education_compare(df: pd.DataFrame):
-    rate = (
-        df.groupby("education")["deposit"]
-        .apply(lambda s: (s == "yes").mean() * 100)
-        .reset_index(name="rate")
-        .sort_values("rate", ascending=False)
-    )
-    fig = px.bar(
-        rate,
-        x="education",
-        y="rate",
-        color="rate",
-        color_continuous_scale=["#FCE7F3", PINK],
-        title="Subscription Rate by Education (%)",
-    )
-    fig.update_layout(**PLOTLY_LAYOUT, height=360, coloraxis_showscale=False)
-    fig.update_yaxes(title="Rate (%)", gridcolor="#FBCFE8")
-    fig.update_xaxes(title="Education")
-    return fig
-
-
-def render_overview(df: pd.DataFrame, full_n: int):
+def overview(df, full_n):
     n = len(df)
-    sub_rate = (df["deposit"] == "yes").mean() * 100 if n else 0
-    no_rate = 100 - sub_rate
-    features = df.shape[1] - 1
+    sub = (df["deposit"] == "yes").mean() * 100 if n else 0
+    nos = 100 - sub
+    feats = df.shape[1] - 1
 
-    c1, c2, c3, c4 = st.columns(4)
-    with c1:
-        st.markdown(kpi_card("👥", f"{n:,}", "Total Customers"), unsafe_allow_html=True)
-    with c2:
-        st.markdown(kpi_card("📢", f"{sub_rate:.1f}%", "Subscribed"), unsafe_allow_html=True)
-    with c3:
-        st.markdown(kpi_card("📉", f"{no_rate:.1f}%", "Did Not Subscribe"), unsafe_allow_html=True)
-    with c4:
-        st.markdown(kpi_card("⭐", f"{features}", "Features"), unsafe_allow_html=True)
+    st.markdown(
+        f"""
+        <div class="hero">
+          <div>
+            <h1>Bank Marketing Campaign</h1>
+            <p>Exploratory Data Analysis (EDA) Dashboard</p>
+          </div>
+          <div class="badge">🗄️ Dataset: {full_n:,} Records • {df.shape[1]} Features</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
-    st.markdown("<br/>", unsafe_allow_html=True)
+    a, b, c, d = st.columns(4)
+    a.markdown(kpi("👥", f"{n:,}", "Total Customers"), unsafe_allow_html=True)
+    b.markdown(kpi("📢", f"{sub:.1f}%", "Subscribed"), unsafe_allow_html=True)
+    c.markdown(kpi("📈", f"{nos:.1f}%", "Did Not Subscribe"), unsafe_allow_html=True)
+    d.markdown(kpi("⭐", f"{feats}", "Features", gold=True), unsafe_allow_html=True)
+
+    st.markdown("<div style='height:0.75rem'></div>", unsafe_allow_html=True)
 
     g1, g2, g3 = st.columns(3)
     with g1:
-        st.markdown('<div class="panel"><p class="panel-title">Subscription Rate</p></div>', unsafe_allow_html=True)
-        st.plotly_chart(subscription_donut(df), use_container_width=True)
+        st.markdown('<div class="card"><h3>Subscription Rate</h3>', unsafe_allow_html=True)
+        st.plotly_chart(fig_donut_sub(df), use_container_width=True, config={"displayModeBar": False})
+        st.markdown("</div>", unsafe_allow_html=True)
     with g2:
-        st.markdown('<div class="panel"><p class="panel-title">Age Distribution</p></div>', unsafe_allow_html=True)
-        st.plotly_chart(age_hist(df), use_container_width=True)
+        st.markdown('<div class="card"><h3>Age Distribution</h3>', unsafe_allow_html=True)
+        st.plotly_chart(fig_age(df), use_container_width=True, config={"displayModeBar": False})
+        st.markdown("</div>", unsafe_allow_html=True)
     with g3:
-        st.markdown('<div class="panel"><p class="panel-title">Campaign Outcome by Job</p></div>', unsafe_allow_html=True)
-        st.plotly_chart(job_outcome(df), use_container_width=True)
+        st.markdown('<div class="card"><h3>Campaign Outcome by Job</h3>', unsafe_allow_html=True)
+        st.plotly_chart(fig_job(df), use_container_width=True, config={"displayModeBar": False})
+        st.markdown("</div>", unsafe_allow_html=True)
 
-    b1, b2 = st.columns([1.2, 1])
-    with b1:
+    st.markdown("<div style='height:0.35rem'></div>", unsafe_allow_html=True)
+
+    left, right = st.columns([1.2, 1])
+    with left:
         st.markdown(
             f"""
-            <div class="insight-box">
-                <h3>💡 Key Insights</h3>
-                <ul>
-                    <li>Filtered view shows <b>{sub_rate:.1f}%</b> subscription rate
-                        (full data: {full_n:,} rows).</li>
-                    <li>Young and middle-aged customers are the largest contacted group.</li>
-                    <li>Job type and contact channel clearly shift subscription odds.</li>
-                    <li>Longer call duration strongly tracks with a “yes” outcome.</li>
-                </ul>
+            <div class="insights">
+              <h3>💡 Key Insights</h3>
+              <div class="ins-row"><div class="ins-ic">✓</div>
+                <div class="ins-txt"><b>{sub:.1f}%</b> of customers subscribed to a term deposit.</div></div>
+              <div class="ins-row"><div class="ins-ic">✓</div>
+                <div class="ins-txt">Young and middle-aged customers show higher interest.</div></div>
+              <div class="ins-row"><div class="ins-ic">✓</div>
+                <div class="ins-txt">Blue-collar and technician workers had strong response rates.</div></div>
+              <div class="ins-row"><div class="ins-ic">✓</div>
+                <div class="ins-txt">Campaign success is influenced by job type, age, and contact type.</div></div>
             </div>
             """,
             unsafe_allow_html=True,
         )
-    with b2:
-        st.markdown('<div class="panel"><p class="panel-title">Contact Type Analysis</p></div>', unsafe_allow_html=True)
-        st.plotly_chart(contact_donut(df), use_container_width=True)
+    with right:
+        st.markdown('<div class="card"><h3>Contact Type Analysis</h3>', unsafe_allow_html=True)
+        st.plotly_chart(fig_contact(df), use_container_width=True, config={"displayModeBar": False})
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    # Decorative bank (mockup bottom-right)
+    bank = Path("assets") / "bank.svg"
+    if bank.exists():
+        b64 = svg_b64(bank)
+        st.markdown(
+            f'<img class="decor" src="data:image/svg+xml;base64,{b64}" alt="bank"/>',
+            unsafe_allow_html=True,
+        )
 
 
-def render_customer(df: pd.DataFrame):
+def page_customer(df):
+    st.markdown('<div class="hero"><div><h1>Customer Analysis</h1><p>Who was contacted?</p></div></div>',
+                unsafe_allow_html=True)
     c1, c2 = st.columns(2)
     with c1:
-        st.plotly_chart(age_hist(df), use_container_width=True)
-        st.plotly_chart(education_compare(df), use_container_width=True)
+        st.markdown('<div class="card"><h3>Age Distribution</h3>', unsafe_allow_html=True)
+        st.plotly_chart(fig_age(df), use_container_width=True, config={"displayModeBar": False})
+        st.markdown('<div class="card"><h3>Subscription by Education</h3>', unsafe_allow_html=True)
+        st.plotly_chart(fig_edu(df), use_container_width=True, config={"displayModeBar": False})
     with c2:
-        st.plotly_chart(balance_by_deposit(df), use_container_width=True)
-        marital = (
-            df.groupby("marital")["deposit"]
-            .apply(lambda s: (s == "yes").mean() * 100)
-            .reset_index(name="rate")
-        )
-        fig = px.bar(
-            marital,
-            x="marital",
-            y="rate",
-            color_discrete_sequence=[PINK],
-            title="Subscription Rate by Marital Status (%)",
-        )
-        fig.update_layout(**PLOTLY_LAYOUT, height=360)
-        fig.update_yaxes(gridcolor="#FBCFE8")
-        st.plotly_chart(fig, use_container_width=True)
+        st.markdown('<div class="card"><h3>Balance by Subscription</h3>', unsafe_allow_html=True)
+        st.plotly_chart(fig_balance(df), use_container_width=True, config={"displayModeBar": False})
+        marital = (df.groupby("marital")["deposit"].apply(lambda s: (s == "yes").mean() * 100)
+                   .reset_index(name="rate"))
+        fig = px.bar(marital, x="marital", y="rate", color_discrete_sequence=[PINK])
+        fig.update_layout(**PLOTLY, height=320)
+        fig.update_yaxes(title="Rate (%)", gridcolor="#F8BBD0")
+        st.markdown('<div class="card"><h3>Subscription by Marital Status</h3>', unsafe_allow_html=True)
+        st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
 
-def render_campaign(df: pd.DataFrame):
+def page_campaign(df):
+    st.markdown('<div class="hero"><div><h1>Campaign Insights</h1><p>How the campaign performed</p></div></div>',
+                unsafe_allow_html=True)
     c1, c2 = st.columns(2)
     with c1:
-        st.plotly_chart(month_sub_rate(df), use_container_width=True)
-        st.plotly_chart(contact_donut(df), use_container_width=True)
+        st.markdown('<div class="card"><h3>Subscription Rate by Month</h3>', unsafe_allow_html=True)
+        st.plotly_chart(fig_month(df), use_container_width=True, config={"displayModeBar": False})
+        st.markdown('<div class="card"><h3>Contact Type Analysis</h3>', unsafe_allow_html=True)
+        st.plotly_chart(fig_contact(df), use_container_width=True, config={"displayModeBar": False})
     with c2:
-        st.plotly_chart(duration_scatter(df), use_container_width=True)
+        st.markdown('<div class="card"><h3>Duration vs Balance</h3>', unsafe_allow_html=True)
+        st.plotly_chart(fig_scatter(df), use_container_width=True, config={"displayModeBar": False})
         camp = df.copy()
-        camp["campaign_bin"] = pd.cut(
-            camp["campaign"],
-            bins=[0, 1, 2, 3, 5, 10, 100],
-            labels=["1", "2", "3", "4-5", "6-10", "11+"],
-        )
-        rate = (
-            camp.groupby("campaign_bin", observed=True)["deposit"]
-            .apply(lambda s: (s == "yes").mean() * 100)
-            .reset_index(name="rate")
-        )
-        fig = px.line(
-            rate,
-            x="campaign_bin",
-            y="rate",
-            markers=True,
-            title="Subscription Rate vs Number of Contacts",
-            color_discrete_sequence=[PINK_DEEP],
-        )
-        fig.update_layout(**PLOTLY_LAYOUT, height=360)
-        fig.update_yaxes(title="Rate (%)", gridcolor="#FBCFE8")
-        fig.update_xaxes(title="Campaign contacts")
-        st.plotly_chart(fig, use_container_width=True)
+        camp["bin"] = pd.cut(camp["campaign"], bins=[0,1,2,3,5,10,100],
+                             labels=["1","2","3","4-5","6-10","11+"])
+        rate = (camp.groupby("bin", observed=True)["deposit"]
+                .apply(lambda s: (s == "yes").mean() * 100).reset_index(name="rate"))
+        fig = px.line(rate, x="bin", y="rate", markers=True, color_discrete_sequence=[PINK])
+        fig.update_layout(**PLOTLY, height=320)
+        fig.update_yaxes(title="Rate (%)", gridcolor="#F8BBD0")
+        st.markdown('<div class="card"><h3>Subscription vs Number of Contacts</h3>', unsafe_allow_html=True)
+        st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
 
-def render_subscription(df: pd.DataFrame):
+def page_subscription(df):
+    st.markdown('<div class="hero"><div><h1>Subscription Analysis</h1><p>What drives a yes?</p></div></div>',
+                unsafe_allow_html=True)
     c1, c2 = st.columns(2)
     with c1:
-        st.plotly_chart(subscription_donut(df), use_container_width=True)
-        st.plotly_chart(job_outcome(df), use_container_width=True)
+        st.markdown('<div class="card"><h3>Subscription Rate</h3>', unsafe_allow_html=True)
+        st.plotly_chart(fig_donut_sub(df), use_container_width=True, config={"displayModeBar": False})
+        st.markdown('<div class="card"><h3>Campaign Outcome by Job</h3>', unsafe_allow_html=True)
+        st.plotly_chart(fig_job(df), use_container_width=True, config={"displayModeBar": False})
     with c2:
-        st.plotly_chart(corr_heatmap(df), use_container_width=True)
-        housing = (
-            df.groupby("housing")["deposit"]
-            .apply(lambda s: (s == "yes").mean() * 100)
-            .reset_index(name="rate")
-        )
-        fig = px.bar(
-            housing,
-            x="housing",
-            y="rate",
-            color="housing",
-            color_discrete_sequence=[PINK, PINK_SOFT],
-            title="Subscription Rate by Housing Loan (%)",
-        )
-        fig.update_layout(**PLOTLY_LAYOUT, height=320, showlegend=False)
-        st.plotly_chart(fig, use_container_width=True)
+        st.markdown('<div class="card"><h3>Numeric Correlation</h3>', unsafe_allow_html=True)
+        st.plotly_chart(fig_corr(df), use_container_width=True, config={"displayModeBar": False})
+        housing = (df.groupby("housing")["deposit"].apply(lambda s: (s == "yes").mean() * 100)
+                   .reset_index(name="rate"))
+        fig = px.bar(housing, x="housing", y="rate", color="housing",
+                     color_discrete_sequence=[PINK, PINK_SOFT])
+        fig.update_layout(**PLOTLY, height=280, showlegend=False)
+        st.markdown('<div class="card"><h3>Subscription by Housing Loan</h3>', unsafe_allow_html=True)
+        st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
 
-def render_about():
+def page_about():
     st.markdown(
         f"""
-        <div class="insight-box">
-            <h3>About this project</h3>
-            <p style="color:{PLUM_SOFT};">
-                This dashboard explores the Bank Marketing Campaign dataset to understand
-                which customer and campaign factors link to term-deposit subscriptions.
-            </p>
-            <ul>
-                <li><b>Source:</b> UCI / Kaggle Bank Marketing data</li>
-                <li><b>Rows × columns:</b> 11,162 × 17</li>
-                <li><b>Target:</b> deposit (yes / no)</li>
-                <li><b>Stack:</b> Python, Pandas, Plotly, Streamlit</li>
-            </ul>
+        <div class="insights">
+          <h3>About this project</h3>
+          <div class="ins-row"><div class="ins-ic">1</div>
+            <div class="ins-txt"><b>Source:</b> UCI / Kaggle Bank Marketing data</div></div>
+          <div class="ins-row"><div class="ins-ic">2</div>
+            <div class="ins-txt"><b>Size:</b> 11,162 rows × 17 columns</div></div>
+          <div class="ins-row"><div class="ins-ic">3</div>
+            <div class="ins-txt"><b>Target:</b> deposit (yes / no)</div></div>
+          <div class="ins-row"><div class="ins-ic">4</div>
+            <div class="ins-txt"><b>Stack:</b> Python · Pandas · Plotly · Streamlit</div></div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -573,51 +615,38 @@ def main():
     )
     inject_css()
     df = load_data()
-    filtered, page = apply_filters(df)
-
-    st.markdown(
-        f"""
-        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; flex-wrap:wrap;">
-            <div>
-                <div class="hero-title">Bank Marketing Campaign — Exploratory Data Analysis (EDA) Dashboard</div>
-                <div class="hero-sub">Understand which customers subscribe to a term deposit after a marketing call.</div>
-            </div>
-            <div class="pill">Dataset: {len(df):,} Records • {df.shape[1]} Features</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-    st.caption(f"Showing **{len(filtered):,}** rows after filters.")
+    filtered, page = sidebar(df)
 
     if page == "Overview":
-        render_overview(filtered, len(df))
+        overview(filtered, len(df))
     elif page == "Customer Analysis":
-        render_customer(filtered)
+        page_customer(filtered)
     elif page == "Campaign Insights":
-        render_campaign(filtered)
+        page_campaign(filtered)
     elif page == "Subscription Analysis":
-        render_subscription(filtered)
+        page_subscription(filtered)
     else:
-        render_about()
+        page_about()
 
-    st.markdown("---")
+    st.markdown("<div style='height:0.8rem'></div>", unsafe_allow_html=True)
     show_raw = st.checkbox("Show raw data")
     if show_raw:
         st.dataframe(filtered, use_container_width=True)
 
     st.markdown(
         f"""
-        <div class="insight-box" style="margin-top:1rem;">
-            <h3>📌 Findings</h3>
-            <ul>
-                <li><b>Duration matters:</b> longer calls strongly align with subscriptions.</li>
-                <li><b>Housing loan = lower yes rate:</b> customers without a housing loan subscribe more often.</li>
-                <li><b>Prior success helps:</b> previous campaign success (poutcome) lifts conversion.</li>
-            </ul>
-            <p style="color:{PINK_DEEP}; font-weight:700;">
-                Suggestion: prioritise cellular outreach to customers with no housing loan,
-                and invest call time in high-intent conversations rather than more contacts.
-            </p>
+        <div class="insights" style="margin-top:0.8rem;">
+          <h3>📌 Findings</h3>
+          <div class="ins-row"><div class="ins-ic">1</div>
+            <div class="ins-txt"><b>Duration matters</b> — longer calls strongly align with subscriptions.</div></div>
+          <div class="ins-row"><div class="ins-ic">2</div>
+            <div class="ins-txt"><b>No housing loan</b> — higher subscription rate than customers with one.</div></div>
+          <div class="ins-row"><div class="ins-ic">3</div>
+            <div class="ins-txt"><b>Prior success helps</b> — previous campaign success lifts conversion.</div></div>
+          <p style="color:{PINK};font-weight:700;margin:0.5rem 0 0 0;font-size:0.88rem;">
+            Suggestion: prioritise cellular outreach to customers with no housing loan,
+            and invest in call quality over more contacts.
+          </p>
         </div>
         """,
         unsafe_allow_html=True,
