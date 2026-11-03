@@ -31,8 +31,10 @@ Exploratory analysis of a bank phone-marketing campaign to learn which customers
 python -m venv venv
 venv\Scripts\activate
 pip install -r requirements.txt
-streamlit run app.py
+python -m streamlit run app.py
 ```
+
+The dashboard uses a pink / magenta / plum theme (see `.streamlit/config.toml` and custom CSS in `app.py`).
 
 Open the notebook with Jupyter / VS Code / Google Colab (upload `data/bank.csv` next to the notebook or keep the `data/` relative path).
 
