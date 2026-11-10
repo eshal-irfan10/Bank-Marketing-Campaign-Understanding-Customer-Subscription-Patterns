@@ -1,13 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 200" fill="none">
-  <path d="M0 200 C40 160 80 170 120 155 C160 140 180 120 220 130 C250 138 270 150 280 145 L280 200 Z" fill="#F8BBD0" opacity="0.9"/>
-  <path d="M0 200 C50 175 90 185 140 170 C190 155 230 165 280 170 L280 200 Z" fill="#F48FB1" opacity="0.85"/>
-  <rect x="88" y="78" width="104" height="70" rx="4" fill="#FCE4EC" stroke="#E91E63" stroke-width="2"/>
-  <path d="M80 78 L140 42 L200 78 Z" fill="#F8BBD0" stroke="#E91E63" stroke-width="2" stroke-linejoin="round"/>
-  <rect x="100" y="95" width="14" height="28" rx="2" fill="#E91E63" opacity="0.55"/>
-  <rect x="122" y="95" width="14" height="28" rx="2" fill="#E91E63" opacity="0.55"/>
-  <rect x="144" y="95" width="14" height="28" rx="2" fill="#E91E63" opacity="0.55"/>
-  <rect x="166" y="95" width="14" height="28" rx="2" fill="#E91E63" opacity="0.55"/>
-  <rect x="126" y="118" width="28" height="30" rx="2" fill="#C2185B" opacity="0.75"/>
+  <!-- green theme decoration -->
+  <path d="M0 200 C40 160 80 170 120 155 C160 140 180 120 220 130 C250 138 270 150 280 145 L280 200 Z" fill="#81C784" opacity="0.95"/>
+  <path d="M0 200 C50 175 90 185 140 170 C190 155 230 165 280 170 L280 200 Z" fill="#66BB6A" opacity="0.9"/>
+  <rect x="88" y="78" width="104" height="70" rx="4" fill="#E8F5E9" stroke="#2E7D32" stroke-width="2.5"/>
+  <path d="M80 78 L140 42 L200 78 Z" fill="#A5D6A7" stroke="#2E7D32" stroke-width="2.5" stroke-linejoin="round"/>
+  <rect x="100" y="95" width="14" height="28" rx="2" fill="#43A047" opacity="0.7"/>
+  <rect x="122" y="95" width="14" height="28" rx="2" fill="#43A047" opacity="0.7"/>
+  <rect x="144" y="95" width="14" height="28" rx="2" fill="#43A047" opacity="0.7"/>
+  <rect x="166" y="95" width="14" height="28" rx="2" fill="#43A047" opacity="0.7"/>
+  <rect x="126" y="118" width="28" height="30" rx="2" fill="#1B5E20" opacity="0.85"/>
   <circle cx="140" cy="55" r="8" fill="#FFD54F"/>
-  <rect x="70" y="148" width="140" height="10" rx="2" fill="#E91E63" opacity="0.45"/>
+  <rect x="70" y="148" width="140" height="10" rx="2" fill="#2E7D32" opacity="0.55"/>
 </svg>
